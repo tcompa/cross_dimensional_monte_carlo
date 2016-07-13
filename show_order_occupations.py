@@ -4,7 +4,6 @@ created: 2016-07-13 -- 19:30 CEST
 author: tc
 '''
 
-import math
 import cPickle
 import numpy
 import matplotlib.pyplot as plt

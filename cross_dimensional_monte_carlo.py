@@ -1,5 +1,5 @@
 '''
-program: diagrammatic_monte_carlo.py
+program: cross_dimensional_monte_carlo.py
 created: 2016-07-13 -- 19:30 CEST
 author: tc
 '''
@@ -64,40 +64,38 @@ def verify_detailed_balance(ntrials=10000, tol=1e-10):
     detailed-balance condition holds.
     '''
     for trial in xrange(ntrials):
-        n = random.randint(0, 10)
-        x = [random.uniform(0.0, 5.0) for dummy in xrange(n + 1)]
+        n = random.randint(0, 20)
+        x = [random.uniform(-10.0, 10.0) for dummy in xrange(n + 1)]
         fwd = P(n, x[:-1]) * apriori_prob(n, n + 1, x) * prob_acc(n, n + 1, x)
         bwd = P(n + 1, x) * apriori_prob(n + 1, n, x) * prob_acc(n + 1, n, x)
         if abs(fwd - bwd) > tol:
             sys.exit()
-    print 'verified DB for %i trials (tol=%g)' % (ntrials, tol)
+    print 'All right. I have explicitly verified the detailed-balance ' + \
+          'condition for %i random cases (tolerance=%g)' % (ntrials, tol)
 
 
 # Preliminary check
 verify_detailed_balance()
 
 # MC parameters
-nsteps = 10 ** 7 * 5
-measure_every = 10 * 5
-
-# Parameter for fixed-n steps
+nsteps = 10 ** 7
+measure_every = 10
 delta = 0.3
 
 # Observables
 histo_n = {}
-data = {n: [] for n in xrange(20)}
+data = {n: [] for n in xrange(50)}
 
 # Initialize state and run the MC loop
 n = 0
 x = []
+print '[Monte Carlo iterations] start'
 for step in xrange(nsteps):
     assert n == len(x)
-
     # Fixed-n move
     xnew = [random.gauss(x[i], delta) for i in xrange(n)]
     if random.random() * P(n, x) < P(n, xnew):
         x = xnew[:]
-
     # Variable-n move
     if random.random() < 0.5:
         # n -> (n + 1)
@@ -110,12 +108,16 @@ for step in xrange(nsteps):
         if random.random() < prob_acc(n, n - 1, x):
             n -= 1
             x = x[:n]
-
-    # Take some measurements
+    # Measurements
     histo_n[n] = histo_n.get(n, 0) + 1
     if step % measure_every == 0:
         if n < 5:
             data[n].append(x)
+print '[Monte Carlo iterations] end'
+
+for n in sorted(histo_n.keys()):
+    print 'Occupation number of sector %i:\t%i' % (n, histo_n[n])
+
 
 with open('data_order_occupations.pickle', 'w') as out:
     cPickle.dump(histo_n, out)

@@ -23,7 +23,7 @@ for n in xrange(1, 5):
 
     # Compute radii and their histogram
     r = (x ** 2).sum(axis=1) ** 0.5
-    h, e = numpy.histogram(r / sigma, bins=128, normed=True)
+    h, e = numpy.histogram(r / sigma, bins=100, normed=True)
     c = 0.5 * (e[1:] + e[:-1])
     plt.plot(c, h, label='$n=%i$' % n)
 
