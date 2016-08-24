@@ -9,15 +9,14 @@ import cPickle
 import numpy
 import matplotlib.pyplot as plt
 
+
 sigma_sq = 0.25
 sigma = math.sqrt(sigma_sq)
 
 with open('data_positions.pickle', 'r') as read:
     data = cPickle.load(read)
 
-for n in xrange(1, 5):
-    if n not in data.keys():
-        continue
+for n in sorted(data.keys()):
     x = numpy.array(data[n])
     assert x.shape[1] == n
 

@@ -8,7 +8,7 @@ import math
 
 
 def Z(n):
-    return math.exp(-n)
+    return 1.0 / (n + 1.0) ** 3
 
 
 def prob(n, x):

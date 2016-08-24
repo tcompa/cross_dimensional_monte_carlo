@@ -8,6 +8,8 @@ import cPickle
 import numpy
 import matplotlib.pyplot as plt
 
+from probability_distributions import Z as Z
+
 
 with open('data_order_occupations.pickle', 'r') as read:
     histo_n = cPickle.load(read)
@@ -18,7 +20,7 @@ all_n = numpy.arange(nmax + 1.0)
 Z_by_Z0_MC = numpy.array([histo_n[n] for n in all_n]) / float(histo_n[0])
 plt.scatter(all_n, Z_by_Z0_MC, label='MC', zorder=4, s=50)
 
-Z_by_Z0_exact = numpy.exp(-all_n)
+Z_by_Z0_exact = numpy.array(map(Z, all_n)) / Z(0)
 plt.plot(all_n, Z_by_Z0_exact, label='exact', c=u'C1')
 
 plt.xlabel('$n$', fontsize=18)

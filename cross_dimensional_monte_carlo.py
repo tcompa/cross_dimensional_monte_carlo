@@ -5,12 +5,12 @@ author: tc
 '''
 
 import random
-import sys
 import cPickle
 
 from probability_distributions import prob as P
 
 
+# Parameters for the a-priori distributions
 xmin = 0.0
 xmax = 10.0
 
@@ -57,70 +57,46 @@ def prob_acc(nold, nnew, x):
     return min(1.0, bwd / fwd)
 
 
-def verify_detailed_balance(ntrials=10000, tol=1e-10):
-    '''
-    Generate several virtual Monte Carlo moves, moving between the n-
-    and the (n+1)-dimensional sectors, and explicitly verify that the
-    detailed-balance condition holds.
-    '''
-    for trial in xrange(ntrials):
-        n = random.randint(0, 20)
-        x = [random.uniform(-10.0, 10.0) for dummy in xrange(n + 1)]
-        fwd = P(n, x[:-1]) * apriori_prob(n, n + 1, x) * prob_acc(n, n + 1, x)
-        bwd = P(n + 1, x) * apriori_prob(n + 1, n, x) * prob_acc(n + 1, n, x)
-        if abs(fwd - bwd) > tol:
-            sys.exit()
-    print 'All right. I have explicitly verified the detailed-balance ' + \
-          'condition for %i random cases (tolerance=%g)' % (ntrials, tol)
-
-
-# Preliminary check
-verify_detailed_balance()
-
-# MC parameters
-nsteps = 10 ** 7
-measure_every = 10
+# Set MC parameters
+nsteps = 10 ** 6
 delta = 0.3
 
-# Observables
+# Initialize observables (sector occupation number, and positions)
 histo_n = {}
-data = {n: [] for n in xrange(50)}
+measure_pos_every = 10
+nmax_for_pos = 5
+pos = {}
 
-# Initialize state and run the MC loop
+# Initialize configuration
 n = 0
 x = []
-print '[Monte Carlo iterations] start'
+# Run the MC loop
 for step in xrange(nsteps):
     assert n == len(x)
     # Fixed-n move
     xnew = [random.gauss(x[i], delta) for i in xrange(n)]
     if random.random() * P(n, x) < P(n, xnew):
         x = xnew[:]
-    # Variable-n move
+    # Variable-n move (either n->n+1 or n->n-1)
     if random.random() < 0.5:
-        # n -> (n + 1)
         xnew = sample_apriori_prob(n, n + 1, x)
         if random.random() < prob_acc(n, n + 1, xnew):
             n += 1
             x = xnew[:]
     else:
-        # n -> (n-1)
         if random.random() < prob_acc(n, n - 1, x):
             n -= 1
             x = x[:n]
-    # Measurements
+    # Measure observables
     histo_n[n] = histo_n.get(n, 0) + 1
-    if step % measure_every == 0:
-        if n < 5:
-            data[n].append(x)
-print '[Monte Carlo iterations] end'
+    if step % measure_pos_every == 0 and 0 < n and n < nmax_for_pos:
+        pos[n] = pos.get(n, []) + [x[:]]
 
 for n in sorted(histo_n.keys()):
     print 'Occupation number of sector %i:\t%i' % (n, histo_n[n])
-
 
 with open('data_order_occupations.pickle', 'w') as out:
     cPickle.dump(histo_n, out)
 
 with open('data_positions.pickle', 'w') as out:
-    cPickle.dump(data, out)
+    cPickle.dump(pos, out)
